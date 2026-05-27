@@ -1,4 +1,4 @@
-# Advanced Retry System
+# Nodejs Advanced Retry System
 
 A lightweight and resilient retry library for Node.js featuring:
 
@@ -23,7 +23,7 @@ Perfect for:
 ## Installation
 
 ```bash
-npm install advanced-retry-system
+npm install node-retry-system
 ```
 
 ---
@@ -46,7 +46,7 @@ npm install advanced-retry-system
 ```js
 const {
   AdvanceRetrySystem
-} = require("advanced-retry-system");
+} = require("node-retry-system");
 
 const retry = new AdvanceRetrySystem({
   retry: {
