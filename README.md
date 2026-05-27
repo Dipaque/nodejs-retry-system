@@ -376,4 +376,4 @@ Feel free to open a pull request or create an issue.
 
 Deepak R
 
-GitHub: https://github.com/yourusername
+GitHub: [Deepak R](https://github.com/Dipaque)
