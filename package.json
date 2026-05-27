@@ -1,0 +1,23 @@
+{
+  "name": "advance-retry-system",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon index.js",
+    "start": "node index.js",
+    "test": "jest"
+  },
+  "keywords": [
+    "retry",
+    "backoff",
+    "circuit-breaker",
+    "resilience",
+    "nodejs"
+  ],
+  "author": "Deepak R",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^30.4.2"
+  }
+}
