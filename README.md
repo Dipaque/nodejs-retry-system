@@ -83,7 +83,7 @@ Simulating an unstable API.
 ```js
 const {
   AdvanceRetrySystem
-} = require("advanced-retry-system");
+} = require("node-retry-system");
 
 const retry = new AdvanceRetrySystem({
   retry: {
@@ -341,7 +341,7 @@ This package is useful for:
 Clone repository:
 
 ```bash
-git clone <repo-url>
+git clone [https://github.com/Dipaque/nodejs-retry-system](https://github.com/Dipaque/nodejs-retry-system)
 ```
 
 Install dependencies:
