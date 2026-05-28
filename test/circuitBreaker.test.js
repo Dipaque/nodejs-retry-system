@@ -1,107 +1,58 @@
-const CircuitBreaker =
-    require("../src/classes/CircuitBreaker");
+const CircuitBreaker = require("../src/core/CircuitBreaker");
+
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 describe("CircuitBreaker", () => {
+  test("should execute successfully", async () => {
+    const cb = new CircuitBreaker({
+      failureThreshold: 2,
+      restTimeout: 100,
+    });
 
-    test(
-        "should execute successfully",
-        async () => {
+    const fn = jest.fn().mockResolvedValue("ok");
 
-            const cb =
-                new CircuitBreaker({
-                    failureThreshold: 2,
-                    restTimeout: 100
-                });
+    const result = await cb.execute(fn);
 
-            const fn =
-                jest.fn()
-                    .mockResolvedValue(
-                        "ok"
-                    );
+    expect(result).toBe("ok");
+    expect(fn).toHaveBeenCalledTimes(1);
+    expect(cb.state).toBe("CLOSED");
+  });
 
-            const result =
-                await cb.execute(fn);
+  test("should open circuit after failures", async () => {
+    const cb = new CircuitBreaker({
+      failureThreshold: 1,
+      restTimeout: 1000,
+    });
 
-            expect(result)
-                .toBe("ok");
+    const fn = jest.fn().mockRejectedValue(new Error("fail"));
 
-            expect(fn)
-                .toHaveBeenCalledTimes(1);
-        }
-    );
+    await expect(cb.execute(fn)).rejects.toThrow();
 
-    test(
-        "should open circuit after failures",
-        async () => {
+    // next call should be blocked immediately
+    await expect(cb.execute(fn)).rejects.toThrow(/circuit breaker is open/i);
 
-            const cb =
-                new CircuitBreaker({
-                    failureThreshold: 2,
-                    restTimeout: 1000
-                });
+    expect(cb.state).toBe("OPEN");
+  });
 
-            const fn =
-                jest.fn()
-                    .mockRejectedValue(
-                        Error("fail")
-                    );
+  test("should recover OPEN → HALF_OPEN → CLOSED", async () => {
+    const cb = new CircuitBreaker({
+      failureThreshold: 1,
+      restTimeout: 50,
+    });
 
-            await expect(
-                cb.execute(fn)
-            ).rejects.toThrow();
+    const failFn = jest.fn().mockRejectedValue(new Error("fail"));
 
-            await expect(
-                cb.execute(fn)
-            ).rejects.toThrow();
+    await expect(cb.execute(failFn)).rejects.toThrow();
 
-            expect(cb.state)
-                .toBe("OPEN");
-        }
-    );
+    expect(cb.failures).toBe(1);
 
-    test(
-        "should move to HALF_OPEN and close on success",
-        async () => {
+    await wait(60);
 
-            const cb =
-                new CircuitBreaker({
-                    failureThreshold: 1,
-                    restTimeout: 50
-                });
+    const successFn = jest.fn().mockResolvedValue("recovered");
 
-            const failFn =
-                jest.fn()
-                    .mockRejectedValue(
-                        Error("fail")
-                    );
+    const result = await cb.execute(successFn);
 
-            await expect(
-                cb.execute(failFn)
-            ).rejects.toThrow();
-
-            expect(cb.state)
-                .toBe("OPEN");
-
-            await new Promise(
-                r => setTimeout(r, 60)
-            );
-
-            const successFn =
-                jest.fn()
-                    .mockResolvedValue(
-                        "recovered"
-                    );
-
-            const result =
-                await cb.execute(
-                    successFn
-                );
-
-            expect(result)
-                .toBe("recovered");
-
-            expect(cb.state)
-                .toBe("CLOSED");
-        }
-    );
+    expect(result).toBe("recovered");
+    expect(cb.state).toBe("CLOSED");
+  });
 });

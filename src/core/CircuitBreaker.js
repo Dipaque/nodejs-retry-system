@@ -49,20 +49,7 @@ const CIRCUIT_STATE = {
  * @class CircuitBreaker
  */
 class CircuitBreaker {
-
-    /**
-     * Creates a CircuitBreaker instance.
-     *
-     * @constructor
-     * @param {Object} [options={}] Circuit breaker configuration.
-     * @param {number} [options.failureThreshold=5]
-     * Maximum failures allowed before opening the circuit.
-     * @param {number} [options.restTimeout=10000]
-     * Time in milliseconds before attempting recovery
-     * from OPEN state.
-     */
     constructor(options = {}) {
-
         /**
          * Current circuit state.
          *
@@ -70,20 +57,26 @@ class CircuitBreaker {
          */
         this.state = CIRCUIT_STATE.CLOSED;
 
-        /**
+         /**
          * Failure threshold before opening circuit.
          *
          * @type {number}
          */
-        this.failureThreshold =
-            options.failureThreshold ?? 5;
+        this.failureThreshold = options.failureThreshold || 5;
+
+         /**
+         * Recovery timeout duration in milliseconds.
+         *
+         * @type {number}
+         */
+        this.resetTimeout = options.resetTimeout || 1000;
 
         /**
          * Current failure count.
          *
          * @type {number}
          */
-        this.failure = 0;
+        this.failures = 0;
 
         /**
          * Timestamp of last failure.
@@ -91,14 +84,6 @@ class CircuitBreaker {
          * @type {?number}
          */
         this.lastFailureTime = null;
-
-        /**
-         * Recovery timeout duration in milliseconds.
-         *
-         * @type {number}
-         */
-        this.restTimeout =
-            options.restTimeout ?? 10000;
     }
 
     /**
@@ -136,46 +121,29 @@ class CircuitBreaker {
      * - Execution fails
      */
     async execute(fn) {
+        if (this.state === CIRCUIT_STATE.OPEN) {
+            if (Date.now() - this.lastFailureTime >= this.resetTimeout) {
+                this.state = CIRCUIT_STATE.HALF_OPEN;
+            } else {
+                throw new Error('Circuit breaker is OPEN');
+            }
+        }
+
         try {
-
-            if (this.state === CIRCUIT_STATE.OPEN) {
-
-                if (
-                    Date.now() - this.lastFailureTime >=
-                    this.restTimeout
-                ) {
-                    this.state = CIRCUIT_STATE.HALF_OPEN;
-                } else {
-                    throw new Error(
-                        "Circuit breaker is OPEN"
-                    );
-                }
-            }
-
             const result = await fn();
-
-            if (
-                this.state === CIRCUIT_STATE.HALF_OPEN
-            ) {
+            if (this.state === CIRCUIT_STATE.HALF_OPEN) {
                 this.state = CIRCUIT_STATE.CLOSED;
-                this.failure = 0;
+                this.failures = 0;
             }
-
             return result;
-
-        } catch (err) {
-
-            this.failure++;
+        } catch (error) {
+            this.failures++;
             this.lastFailureTime = Date.now();
 
-            if (
-                this.failure >=
-                this.failureThreshold
-            ) {
+            if (this.failures >= this.failureThreshold) {
                 this.state = CIRCUIT_STATE.OPEN;
             }
-
-            throw err;
+            throw error;
         }
     }
 }

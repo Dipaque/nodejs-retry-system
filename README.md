@@ -45,10 +45,10 @@ npm install node-retry-system
 
 ```js
 const {
-  AdvanceRetrySystem
+  RetrySystem
 } = require("node-retry-system");
 
-const retry = new AdvanceRetrySystem({
+const retry = new RetrySystem({
   retry: {
     delay: 1000,
     maxRetries: 3,
@@ -82,10 +82,10 @@ Simulating an unstable API.
 
 ```js
 const {
-  AdvanceRetrySystem
+  RetrySystem
 } = require("node-retry-system");
 
-const retry = new AdvanceRetrySystem({
+const retry = new RetrySystem({
   retry: {
     delay: 1000,
     maxRetries: 5,
@@ -132,7 +132,7 @@ async function fakeApiCall() {
 
 ---
 
-## AdvanceRetrySystem
+## RetrySystem
 
 Combines:
 
@@ -143,7 +143,7 @@ Combines:
 ### Constructor
 
 ```js
-new AdvanceRetrySystem(options)
+new RetrySystem(options)
 ```
 
 ### Options
